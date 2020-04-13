@@ -1,0 +1,10 @@
+.ipynb_checkpoints
+.idea
+machinelearninginaction
+# Python:
+*.py[cod]
+*.so
+*.egg
+*.egg-info
+dist
+build

@@ -6,7 +6,9 @@
 
 k-Nearest Neighbor, kNN, k近邻算法
 """
+import os
 import operator
+
 import numpy as np
 
 
@@ -21,9 +23,9 @@ def createDataSet():
 def classify(in_X, data_set, labels, k):
     """kNN算法实现
 
-    :param in_X: 用于分类的输入向量 【1xN矢量】
+    :param in_X: 用于分类的输入向量 【1xN向量】
     :param data_set: 输入的训练样本集 【NxM矩阵】
-    :param labels: 标签向量 【元素数目和矩阵dataSet的行数相同，1xM矢量】
+    :param labels: 标签向量 【元素数目和矩阵dataSet的行数相同，1xM向量】
     :param k:最近邻居的数目 【奇数】
     :return: label : 输入in_X对应标签
     """
@@ -36,9 +38,9 @@ def classify(in_X, data_set, labels, k):
     # 平方 差矩阵
     sq_diff_mat = diff_mat ** 2
     # sum()所有元素相加，sum(0)列相加，sum(1)行相加
-    # 按行求和 得到 1xN 矢量
+    # 按行求和 得到 1xN 向量
     sq_distances = sq_diff_mat.sum(axis=1)
-    # sq_distances 元素开方 得到 1xN 矢量
+    # sq_distances 元素开方 得到 1xN 向量
     distances = sq_distances ** 0.5
     # 将distances中的元素从小到大排列，提取其对应的index(索引)，然后输出到sorted_dist_indicies
     sorted_dist_indicies = distances.argsort()
@@ -64,7 +66,7 @@ def file2matrix(filename):
     """文件转矩阵
 
     :param filename: 文件名
-    :return: 矩阵，标签矢量
+    :return: 矩阵，标签向量
     """
     # 打开文件
     fr = open(filename)
@@ -94,7 +96,7 @@ def auto_norm(data_set):
     任意取值范围的特征值转化为0到1区间内的值：new_value = (old_value - min)/(max - min)
     其中min和max分别是数据集中的最小特征值和最大特征值
     :param data_set:待归一化矩阵
-    :return:norm_data_set【归一化矩阵】，ranges【每一列(max - min)的矢量】，min_vals【最小值矢量】
+    :return:norm_data_set【归一化矩阵】，ranges【每一列(max - min)的向量】，min_vals【最小值向量】
     """
     # 按列取得最小、最大值
     min_vals = data_set.min(0)
@@ -116,7 +118,7 @@ def dating_class_test():
     """约会数据分类测试"""
     # 测试数据比例
     ho_ratio = 0.10  # hold out 10%
-    # kNN 中 k 设置
+    # 只选择样本数据集中前k个最相似的数据
     k = 3
 
     dating_data_mat, dating_labels = file2matrix('./data/datingTestSet2.txt')  # load data setfrom file
@@ -135,24 +137,75 @@ def dating_class_test():
     print("the total error rate is: %f" % (errorCount / float(num_test_vecs)))
     print(errorCount)
 
+
 def classifyPerson():
-    # 输出结果
-    resultList = ['讨厌', '有些喜欢', '非常喜欢']
-    # 三维特征用户输入
-    percentTats = float(input("玩视频游戏所消耗时间百分比："))
-    ffMiles = float(input("每年获得的飞行常客里程数："))
-    iceCream = float(input("每周消费的冰淇淋公升数："))
-    # 打开的文件名
-    filename = "datingTestSet2.txt"
+    """约会网站预测函数"""
+
+    # 预测结果列表
+    result_list = ['不感兴趣', '有点喜欢', '非常喜欢']
+    # 三维特征，用户输入
+    percent_tats = float(input("玩视频游戏所消耗时间百分比："))
+    fly_miles = float(input("每年飞行里程数："))
+    ice_cream = float(input("每周消费的冰淇淋公升数："))
+    # 数据集文件名
+    filename = "./data/datingTestSet2.txt"
     # 打开并处理数据
-    datingDataMat, datingLabels = file2matrix(filename)
+    dating_data_mat, dating_labels = file2matrix(filename)
     # 训练集归一化
-    normMat, ranges, minVals = auto_norm(datingDataMat)
-    # 生成NumPy数组，测试集
-    inArr = np.array([percentTats, ffMiles, iceCream])
-    # 测试集归一化
-    norminArr = (inArr - minVals) / ranges
+    norm_mat, ranges, min_vals = auto_norm(dating_data_mat)
+    # 输入转NumPy数组，用于预测
+    in_arr = np.array([percent_tats, fly_miles, ice_cream])
+    # 预测输入归一化
+    normin_arr = (in_arr - min_vals) / ranges
     # 返回分类结果
-    classifierResult = classify(norminArr, normMat, datingLabels, 4)
+    classifierResult = classify(normin_arr, norm_mat, dating_labels, 3)
     # 打印结果
-    print("你可能%s这个人" % (resultList[classifierResult - 1]))
+    print("你可能对这个人 %s" % (result_list[classifierResult - 1]))
+
+
+def img2vector(filename):
+    """图像转向量"""
+    # 向量初始化
+    return_vect = np.zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        line_str = fr.readline()
+        for j in range(32):
+            return_vect[0, 32 * i + j] = int(line_str[j])
+    return return_vect
+
+
+def handwritingClassTest():
+    # 标签集
+    hw_labels = []
+    # 训练数据列表
+    training_file_list = os.listdir('./data/trainingDigits')
+    # 训练数据集个数
+    m = len(training_file_list)
+    # 训练矩阵
+    training_mat = np.zeros((m, 1024))
+    for i in range(m):
+        # 文件名
+        file_name_str = training_file_list[i]
+        # 文件名形如‘2_19.txt’ 其中 2 为数据标签
+        class_num = int(file_name_str.split('_')[0])
+        hw_labels.append(class_num)
+        # 训练集添加属性
+        training_mat[i, :] = img2vector('./data/trainingDigits/%s' % file_name_str)
+    # 测试数据列表
+    test_file_list = os.listdir('./data/testDigits')
+    # 预测错误个数
+    error_count = 0
+    # 测试数据集个数
+    m_test = len(test_file_list)
+    for i in range(m_test):
+        file_name_str = test_file_list[i]
+        # 测试数据真实标签
+        class_num = int(file_name_str.split('_')[0])
+        test_vector = img2vector('./data/trainingDigits/%s' % file_name_str)
+        # 预测结果
+        classifier_result = classify(test_vector, training_mat, hw_labels, 3)
+        print("the classifier came back with: %d, the real answer is: %d" % (classifier_result, class_num))
+        if (classifier_result != class_num): error_count += 1
+    print("\nthe total number of errors is: %d" % error_count)
+    print("\nthe total error rate is: %f" % (error_count / float(m_test)))

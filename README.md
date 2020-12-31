@@ -11,6 +11,6 @@
     - chapter3 第三章 决策树
 
 
-### 2 ipynb文件在线查看
+### 2 jupyter文件在线查看
 
 https://nbviewer.jupyter.org/

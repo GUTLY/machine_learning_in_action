@@ -1,6 +1,6 @@
 ## Machine Learning in Action【机器学习实战】
 
-`Python 3` 实现
+`Python3、Jupyter Notebook ` 实现
 
 ### 1 目录结构
 

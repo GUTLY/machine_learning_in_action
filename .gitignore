@@ -8,3 +8,4 @@ resources
 *.egg-info
 dist
 build
+_test.ipynb

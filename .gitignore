@@ -9,3 +9,4 @@ resources
 dist
 build
 _test.ipynb
+debug.log
